@@ -1,0 +1,3 @@
+#!/bin/bash
+uv run otter generate 
+uv run python otto.py
