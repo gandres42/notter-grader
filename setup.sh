@@ -18,7 +18,7 @@ uv add numpy matplotlib scipy nbconvert otter-grader ipykernel
 moved_files=()
 for file in ./files/*; do
     if [ -f "$file" ]; then
-        mv "$file" ./ 
+        cp "$file" ./ 
         moved_files+=("$(basename "$file")")
     fi
 done
