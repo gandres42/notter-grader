@@ -7,6 +7,8 @@ from otter.api import grade_submission
 from otter.run import run_autograder
 import tempfile
 import shutil
+import time
+import json
 
 def otto_ascii_creator(gradescope_dict, total_score, total_possible):
     max_len = max([len(test['name']) for test in gradescope_dict['tests']])
@@ -61,7 +63,9 @@ def score_notebook(notebook_path):
 
         # run all cells in tmp_notebook, ignore errors
         execute_preprocessor = ExecutePreprocessor(timeout=None, allow_errors=True)
+        start_time = time.monotonic()
         execute_preprocessor.preprocess(tmp_notebook, {'metadata': {'path': '.'}})
+        end_time = time.monotonic()
 
         # grade complete notebook
         otter_results = grade_submission(tmp_notebook_path, 'autograder.zip', extra_submission_files=['arm_routines.py'], quiet=True)
@@ -89,10 +93,11 @@ def score_notebook(notebook_path):
             f.write(html_body)
         
         # put all this delectable data into results dictionary
+        gradescope_results['execution_time'] = end_time - start_time
         gradescope_results['output'] = html_body
         gradescope_results['output_format'] = 'html'
         gradescope_results['stdout_visibility'] = 'hidden'
-        
-# Provide the path to your notebook
-notebook_path = 'HW_3_robot_arm.ipynb'
-score_notebook(notebook_path)
+        with open('./results.json', "w") as json_file:
+            json.dump(gradescope_results, json_file)
+
+score_notebook('HW_3_robot_arm.ipynb')

@@ -10,9 +10,9 @@
 # delete env for testing purposes
 rm -rf .venv pyproject.toml uv.lock .python-version
 
-# # create environment
-# uv init && rm hello.py README.md
-# uv add numpy matplotlib scipy nbconvert otter-grader ipykernel
+# create environment
+uv init && rm hello.py README.md
+uv add numpy matplotlib scipy nbconvert otter-grader ipykernel
 
 # # move everything in ./files to ./, create autograder.zip, then move them back
 # moved_files=()
