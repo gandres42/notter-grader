@@ -1,11 +1,11 @@
-# # install uv
-# apt-get update
-# apt-get install curl
-# curl -LsSf https://astral.sh/uv/install.sh | sh
-# source $HOME/.local/bin/env
+# install uv
+apt-get update
+apt-get install curl
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env
 
-# # install python
-# uv python install 3.12.7
+# install python
+uv python install 3.12.7
 
 # delete env for testing purposes
 rm -rf .venv pyproject.toml uv.lock .python-version
