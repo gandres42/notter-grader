@@ -14,16 +14,13 @@ rm -rf .venv pyproject.toml uv.lock .python-version
 uv init && rm hello.py README.md
 uv add numpy matplotlib scipy nbconvert otter-grader ipykernel
 
-# # move everything in ./files to ./, create autograder.zip, then move them back
-# moved_files=()
-# for file in ./files/*; do
-#     if [ -f "$file" ]; then
-#         mv "$file" ./ 
-#         moved_files+=("$(basename "$file")")
-#     fi
-# done
-# files_list=$(printf " %s" "${moved_files[@]}")
-# uv run otter generate $files_list
-# for file in "${moved_files[@]}"; do
-#     mv "./$file" ./files/
-# done
+# move everything in ./files to ./, create autograder.zip
+moved_files=()
+for file in ./files/*; do
+    if [ -f "$file" ]; then
+        mv "$file" ./ 
+        moved_files+=("$(basename "$file")")
+    fi
+done
+files_list=$(printf " %s" "${moved_files[@]}")
+uv run otter generate $files_list
