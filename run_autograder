@@ -94,23 +94,6 @@ def score_notebook(notebook_path):
                     if has_image:
                         filtered_cells.append(cell)
                         keep_header = False  # Reset header-keeping flag
-                
-                elif cell.cell_type == "markdown":
-                    # Check if the cell is the correct type of markdown header
-                    if cell.source.strip().startswith("####"):
-                        # Look ahead to see if there's an image before the next header
-                        keep_header = False
-                        for future_cell in tmp_notebook.cells[i+1:]:
-                            if future_cell.cell_type == "markdown" and future_cell.source.strip().startswith("##"):
-                                break
-                            if future_cell.cell_type == "code":
-                                has_image = any(
-                                    output.get("output_type") == "display_data" and "image/png" in output.get("data", {})
-                                    for output in future_cell.get("outputs", [])
-                                )
-                                if has_image:
-                                    keep_header = True
-                                    break
             else:
                 filtered_cells.append(cell)
         tmp_notebook.cells = filtered_cells
