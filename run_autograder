@@ -10,6 +10,8 @@ import shutil
 import time
 import json
 
+FILTER_IMAGES = True
+
 def otto_ascii_creator(gradescope_dict, total_score, total_possible):
     max_len = max([len(test['name']) for test in gradescope_dict['tests']])
     
@@ -44,7 +46,7 @@ def score_notebook(notebook_path):
         shutil.copyfile(notebook_path, tmp_notebook_path)
         tmp_notebook = nbformat.read(tmp_notebook, as_version=4)
 
-        # clear tmp_notebook outputs and lower header weights
+        # clear tmp_notebook outputs and lower header weights by one #
         for cell in tmp_notebook.cells:
             if cell.cell_type == 'code':
                 cell.outputs = []
@@ -59,7 +61,7 @@ def score_notebook(notebook_path):
                             new_line = '#' * (header_level + 1) + line.lstrip('#')
                             lines[i] = new_line
                 # Join the modified lines back together
-                cell.source = '\n'.join(lines)   
+                cell.source = '\n'.join(lines)
 
         # run all cells in tmp_notebook, ignore errors
         execute_preprocessor = ExecutePreprocessor(timeout=None, allow_errors=True)
@@ -75,6 +77,44 @@ def score_notebook(notebook_path):
         config = run_autograder.autograder_config.AutograderConfig(user_config={})
         gradescope_results['tests'] = otter_results.to_gradescope_dict(config)['tests']
         
+        # iterate over cells and keep only images/headers
+        filtered_cells = []
+        keep_header = False
+        
+        # Iterate through cells
+        for i, cell in enumerate(tmp_notebook.cells):
+            # only keep images and the relevant titles
+            if FILTER_IMAGES:
+                if cell.cell_type == "code":
+                    # Check if the cell contains any image output
+                    has_image = any(
+                        output.get("output_type") == "display_data" and "image/png" in output.get("data", {})
+                        for output in cell.get("outputs", [])
+                    )
+                    if has_image:
+                        filtered_cells.append(cell)
+                        keep_header = False  # Reset header-keeping flag
+                
+                elif cell.cell_type == "markdown":
+                    # Check if the cell is the correct type of markdown header
+                    if cell.source.strip().startswith("####"):
+                        # Look ahead to see if there's an image before the next header
+                        keep_header = False
+                        for future_cell in tmp_notebook.cells[i+1:]:
+                            if future_cell.cell_type == "markdown" and future_cell.source.strip().startswith("##"):
+                                break
+                            if future_cell.cell_type == "code":
+                                has_image = any(
+                                    output.get("output_type") == "display_data" and "image/png" in output.get("data", {})
+                                    for output in future_cell.get("outputs", [])
+                                )
+                                if has_image:
+                                    keep_header = True
+                                    break
+            else:
+                filtered_cells.append(cell)
+        tmp_notebook.cells = filtered_cells
+            
         
         # format top-level results and append to top of notebook
         grader_title_cell = nbformat.v4.new_markdown_cell("# Submission Score")
