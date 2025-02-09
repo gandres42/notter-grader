@@ -1,26 +1,32 @@
 # install uv
-# apt-get update
-# apt-get install curl
-# curl -LsSf https://astral.sh/uv/install.sh | sh
-# source $HOME/.local/bin/env
+apt-get update
+apt-get install curl rsync
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env
 
-# # install python
-# uv python install 3.12.7
+# install python
+uv python install 3.12.8
 
-# delete env for testing purposes
-rm -rf .venv pyproject.toml uv.lock .python-version
+# prepare env in source folder
+cd /autograder/source
 
 # create environment
-uv init && rm hello.py README.md
-uv add numpy matplotlib scipy nbconvert otter-grader ipykernel
+uv python pin 3.12.8
+uv init --bare
+uv add numpy matplotlib scipy nbconvert otter-grader ipykernel python-dotenv
 
-# move everything in ./files to ./, create autograder.zip
+# move provided files to /autograder/source
 moved_files=()
-for file in ./files/*; do
+for file in /autograder/source/files/*; do
     if [ -f "$file" ]; then
         cp "$file" ./ 
         moved_files+=("$(basename "$file")")
     fi
 done
+
+# generate autograder.zip
 files_list=$(printf " %s" "${moved_files[@]}")
 uv run otter generate $files_list
+
+# move run_autograder to correct location
+mv /autograder/source/run_autograder /autograder
