@@ -1,5 +1,4 @@
 #!./.venv/bin/python
-#testing
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
 from nbconvert import HTMLExporter
@@ -14,8 +13,10 @@ import os
 
 load_dotenv()
 
-IMAGES_ONLY = False
-RESTART_RUN_ALL_CHECK = True
+IMAGES_ONLY = os.getenv("OUTPUT_IMAGES_ONLY", 'False').lower() in ('true', '1', 't')
+RESTART_RUN_ALL_CHECK = os.getenv("GRADE_RESTART_RUNALL", 'False').lower() in ('true', '1', 't')
+# NOTEBOOK_PATH = f'/autograder/source/{os.getenv("NOTEBOOK_NAME")}'
+NOTEBOOK_PATH = f'./{os.getenv("NOTEBOOK_NAME")}'
 
 def otto_ascii_creator(gradescope_dict, total_score, total_possible):
     max_len = max([len(test['name']) for test in gradescope_dict['tests']])
@@ -43,7 +44,41 @@ def otto_ascii_creator(gradescope_dict, total_score, total_possible):
     summary = f'{ascii_header}\n{header}\n\n{summary}'
     
     return summary
-    
+
+def check_restart_runall(notebook):
+    execution_counts = []
+    for i, cell in enumerate(notebook.cells):
+        if cell.cell_type == "code":
+            execution_counts.append(cell.execution_count)
+    score = 1
+    msg = "Restarted and all cells run"
+    # for i in range(1, len(execution_counts)):
+    #     if execution_counts[i - 1] != execution_counts[i] - 1:
+    #         restart_score = 0
+    #         restart_message = "Not restarted or not all cells run"
+    #         break
+    return score, msg
+
+def clear_notebook(notebook):
+    for cell in notebook.cells:
+            if cell.cell_type == 'code':
+                cell.outputs = []
+
+def unindent_notebook(notebook):
+    for cell in notebook.cells:
+        if cell.cell_type == 'markdown':
+            lines = cell.source.splitlines()
+            for i, line in enumerate(lines):
+                if line.startswith('#'):
+                    # Count the number of `#` characters to determine the header level
+                    header_level = line.count('#')
+                    if header_level < 6:  # If header is not already at the smallest level
+                        # Reduce the header level by one
+                        new_line = '#' * (header_level + 1) + line.lstrip('#')
+                        lines[i] = new_line
+            # Join the modified lines back together
+            cell.source = '\n'.join(lines)
+
 def score_notebook(notebook_path):
     with tempfile.NamedTemporaryFile(suffix=".ipynb", delete=False) as tmp_notebook:
         # read original into copy, open it with nbformat
@@ -52,34 +87,11 @@ def score_notebook(notebook_path):
         tmp_notebook = nbformat.read(tmp_notebook, as_version=4)
 
         # check if the code has been restarted/run all
-        execution_counts = []
-        for i, cell in enumerate(tmp_notebook.cells):
-            if cell.cell_type == "code":
-                execution_counts.append(cell.execution_count)
-        restart_score = 1
-        restart_message = "Restarted and all cells run"
-        # for i in range(1, len(execution_counts)):
-        #     if execution_counts[i - 1] != execution_counts[i] - 1:
-        #         restart_score = 0
-        #         restart_message = "Not restarted or not all cells run"
-        #         break
+        restart_score, restart_msg = check_restart_runall(tmp_notebook)
 
-        # clear tmp_notebook outputs and lower header weights by one #
-        for cell in tmp_notebook.cells:
-            if cell.cell_type == 'code':
-                cell.outputs = []
-            elif cell.cell_type == 'markdown':
-                lines = cell.source.splitlines()
-                for i, line in enumerate(lines):
-                    if line.startswith('#'):
-                        # Count the number of `#` characters to determine the header level
-                        header_level = line.count('#')
-                        if header_level < 6:  # If header is not already at the smallest level
-                            # Reduce the header level by one
-                            new_line = '#' * (header_level + 1) + line.lstrip('#')
-                            lines[i] = new_line
-                # Join the modified lines back together
-                cell.source = '\n'.join(lines)
+        # clear tmp_notebook outputs and lower header weights by one
+        clear_notebook(tmp_notebook)
+        unindent_notebook(tmp_notebook)
 
         # run all cells in tmp_notebook, ignore errors
         execute_preprocessor = ExecutePreprocessor(timeout=None, allow_errors=True)
@@ -88,7 +100,8 @@ def score_notebook(notebook_path):
         end_time = time.monotonic()
 
         # grade complete notebook
-        otter_results = grade_submission(tmp_notebook_path, '/autograder/source/autograder.zip', extra_submission_files=['arm_routines.py'], quiet=True)
+        # otter_results = grade_submission(tmp_notebook_path, '/autograder/source/autograder.zip', extra_submission_files=['arm_routines.py'], quiet=True)
+        otter_results = grade_submission(tmp_notebook_path, 'autograder.zip', extra_submission_files=['arm_routines.py'], quiet=False)
         gradescope_results = {}
         
         # save per-test results for gradescope results
@@ -102,7 +115,7 @@ def score_notebook(notebook_path):
                 'score': restart_score,
                 'max_score': 1.0,
                 'visibility': 'hidden',
-                'output': restart_message
+                'output': restart_msg
             })
         
         # filter out only images
@@ -141,7 +154,8 @@ def score_notebook(notebook_path):
         gradescope_results['output'] = html_body
         gradescope_results['output_format'] = 'html'
         gradescope_results['stdout_visibility'] = 'hidden'
-        with open('/autograder/results/results.json', "w") as json_file:
+        # with open('/autograder/results/results.json', "w") as json_file:
+        with open('./results.json', "w") as json_file:
             json.dump(gradescope_results, json_file)
 
-score_notebook(f'/autograder/source/{os.getenv("NOTEBOOK_NAME")}')
+score_notebook(NOTEBOOK_PATH)
