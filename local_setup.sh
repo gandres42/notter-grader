@@ -1,7 +1,7 @@
 # create environment
 uv python pin 3.12.8
 uv init --bare
-uv add numpy matplotlib scipy nbconvert otter-grader ipykernel python-dotenv
+uv add numpy matplotlib scipy nbconvert otter-grader ipykernel python-dotenv htmlmin
 
 # move provided files to /autograder/source
 moved_files=()

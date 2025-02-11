@@ -1,7 +1,9 @@
 #!/bin/bash
+# copy submission files to grading workspace
 for file in /autograder/submission/*; do
   [ -e "./autograder/source/$(basename "$file")" ] || cp -r "$file" /autograder/source/
 done
 
+# move to workspace and run the grader
 cd /autograder/source
 ./notter
