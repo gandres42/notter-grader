@@ -1,0 +1,6 @@
+{
+    "notebook_name": "HW_3_robot_arm.ipynb",
+    "required_files": ["arm_routines.py"],
+    "grade_restarted": true,
+    "only_display_outputs": true
+}

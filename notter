@@ -8,26 +8,24 @@ import tempfile
 import shutil
 import time
 import json
-from dotenv import load_dotenv
 import os
-import base64
-import htmlmin
-import urllib.parse
 import base64
 import io
 from PIL import Image
 import numpy as np
+import json
 
-load_dotenv()
+# TODO toggle/combine image and stdout
 
-LOCAL = os.getenv("LOCAL", 'False').lower() in ('true', '1', 't')
-IMAGES_ONLY = os.getenv("OUTPUT_IMAGES_ONLY", 'False').lower() in ('true', '1', 't')
-RESTART_RUN_ALL_CHECK = os.getenv("GRADE_RESTART_RUNALL", 'False').lower() in ('true', '1', 't')
+with open('config.json') as config_file: config = json.load(config_file)
+LOCAL = os.getenv("HOSTNAME", "") == "wintermute"
+IMAGES_ONLY = config['only_display_outputs']
+RESTART_RUN_ALL_CHECK = config['grade_restarted']
 if LOCAL:
-    NOTEBOOK_PATH = f'./{os.getenv("NOTEBOOK_NAME")}'
+    NOTEBOOK_PATH = f'./{config['notebook_name']}'
 else:
-    NOTEBOOK_PATH = f'/autograder/source/{os.getenv("NOTEBOOK_NAME")}'
-    
+    NOTEBOOK_PATH = f'/autograder/source/{config['notebook_name']}'
+REQUIRED_FILES = config['required_files']
 
 def otto_ascii_creator(gradescope_dict):
     max_len = max([len(test['name']) for test in gradescope_dict['tests']])
@@ -129,9 +127,9 @@ def score_notebook(notebook_path):
 
         # grade complete notebook
         if LOCAL:
-            otter_results = grade_submission(tmp_notebook_path, 'autograder.zip', extra_submission_files=['arm_routines.py'], quiet=True)
+            otter_results = grade_submission(tmp_notebook_path, 'autograder.zip', extra_submission_files=REQUIRED_FILES, quiet=True)
         else:
-            otter_results = grade_submission(tmp_notebook_path, '/autograder/source/autograder.zip', extra_submission_files=['arm_routines.py'], quiet=True)
+            otter_results = grade_submission(tmp_notebook_path, '/autograder/source/autograder.zip', extra_submission_files=REQUIRED_FILES, quiet=True)
         
         gradescope_results = {}
         
