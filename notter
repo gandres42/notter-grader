@@ -16,6 +16,7 @@ import urllib.parse
 import base64
 import io
 from PIL import Image
+import numpy as np
 
 load_dotenv()
 
@@ -28,8 +29,10 @@ else:
     NOTEBOOK_PATH = f'/autograder/source/{os.getenv("NOTEBOOK_NAME")}'
     
 
-def otto_ascii_creator(gradescope_dict, total_score, total_possible):
+def otto_ascii_creator(gradescope_dict):
     max_len = max([len(test['name']) for test in gradescope_dict['tests']])
+    total_possible = np.sum([test['max_score'] for test in gradescope_dict['tests'][1:]])
+    total_score = np.sum([test['score'] for test in gradescope_dict['tests'][1:]])
     
     ascii_header = """
 
@@ -57,16 +60,17 @@ def otto_ascii_creator(gradescope_dict, total_score, total_possible):
 
 def check_restart_runall(notebook):
     execution_counts = []
+    prev_run = 0
+    score = 1
+    msg = "Restarted and all cells run"
     for i, cell in enumerate(notebook.cells):
         if cell.cell_type == "code":
             execution_counts.append(cell.execution_count)
-    score = 1
-    msg = "Restarted and all cells run"
-    # for i in range(1, len(execution_counts)):
-    #     if execution_counts[i - 1] != execution_counts[i] - 1:
-    #         restart_score = 0
-    #         restart_message = "Not restarted or not all cells run"
-    #         break
+            if cell.execution_count == None or cell.execution_count != prev_run + 1:
+                score = 0
+                msg = "Did not restart and run all before submission"
+                break
+            prev_run = cell.execution_count
     return score, msg
 
 def clear_notebook(notebook):
@@ -146,9 +150,10 @@ def score_notebook(notebook_path):
             })
 
         # export images from the notebook as HTML
-        html_body = image_html_factory(tmp_notebook)
-        with open('results.html', 'w', encoding='utf-8') as f:
-            f.write(html_body)
+        if LOCAL:
+            html_body = image_html_factory(tmp_notebook)
+            with open('results.html', 'w', encoding='utf-8') as f:
+                f.write(html_body)
         
         # put all this delectable data into results dictionary
         gradescope_results['execution_time'] = end_time - start_time
@@ -163,5 +168,7 @@ def score_notebook(notebook_path):
         else:
             with open('/autograder/results/results.json', "w") as json_file:
                 json_file.write(json_string)
+
+        print(otto_ascii_creator(gradescope_results))
 
 score_notebook(NOTEBOOK_PATH)
