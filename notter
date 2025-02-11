@@ -19,6 +19,7 @@ import json
 
 with open('config.json') as config_file: config = json.load(config_file)
 LOCAL = os.getenv("HOSTNAME", "") == "wintermute"
+MAX_SCORE = config['max_score']
 IMAGES_ONLY = config['only_display_outputs']
 RESTART_RUN_ALL_CHECK = config['grade_restarted']
 if LOCAL:
@@ -27,11 +28,8 @@ else:
     NOTEBOOK_PATH = f'/autograder/source/{config['notebook_name']}'
 REQUIRED_FILES = config['required_files']
 
-def otto_ascii_creator(gradescope_dict):
+def otto_ascii_creator(gradescope_dict, total_score, total_possible):
     max_len = max([len(test['name']) for test in gradescope_dict['tests']])
-    total_possible = np.sum([test['max_score'] for test in gradescope_dict['tests'][1:]])
-    total_score = np.sum([test['score'] for test in gradescope_dict['tests'][1:]])
-    
     ascii_header = """
 
 
@@ -147,17 +145,26 @@ def score_notebook(notebook_path):
                 'output': restart_msg
             })
 
-        # export images from the notebook as HTML
-        if LOCAL:
-            html_body = image_html_factory(tmp_notebook)
-            with open('results.html', 'w', encoding='utf-8') as f:
-                f.write(html_body)
+        # calculate total score with respect to configured max score
+        total_possible = np.sum([test['max_score'] for test in gradescope_results['tests'][1:]])
+        total_score = np.sum([test['score'] for test in gradescope_results['tests'][1:]])
+        adjusted_score = total_score * (MAX_SCORE / total_possible)
         
         # put all this delectable data into results dictionary
         gradescope_results['execution_time'] = end_time - start_time
-        gradescope_results['output'] = html_body
-        gradescope_results['output_format'] = 'html'
         gradescope_results['stdout_visibility'] = 'hidden'
+        gradescope_results['score'] = adjusted_score
+
+        if IMAGES_ONLY:
+            html_body = image_html_factory(tmp_notebook)
+            if LOCAL:
+                with open('results.html', 'w', encoding='utf-8') as f:
+                    f.write(html_body)
+            gradescope_results['output'] = html_body
+            gradescope_results['output_format'] = 'html'
+        else:
+            gradescope_results['output'] = otto_ascii_creator(gradescope_results, total_possible, total_score)
+            gradescope_results['output_format'] = 'text'
 
         json_string = json.dumps(gradescope_results, ensure_ascii=False)
         if LOCAL:
@@ -167,6 +174,6 @@ def score_notebook(notebook_path):
             with open('/autograder/results/results.json', "w") as json_file:
                 json_file.write(json_string)
 
-        print(otto_ascii_creator(gradescope_results))
+        print()
 
 score_notebook(NOTEBOOK_PATH)

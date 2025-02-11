@@ -1,6 +1,7 @@
 {
     "notebook_name": "HW_3_robot_arm.ipynb",
     "required_files": ["arm_routines.py"],
+    "max_score": 25,
     "grade_restarted": true,
     "only_display_outputs": true
 }
