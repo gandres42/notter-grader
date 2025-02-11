@@ -5,5 +5,4 @@ for file in /autograder/submission/*; do
 done
 
 # move to workspace and run the grader
-cd /autograder/source
-./notter
+cd /autograder/source && ./notter.py

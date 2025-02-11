@@ -1,7 +1,6 @@
 #!./.venv/bin/python
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
-from nbconvert import HTMLExporter, MarkdownExporter
 from otter.api import grade_submission
 from otter.run import run_autograder
 import tempfile
@@ -10,9 +9,6 @@ import time
 import json
 from dotenv import load_dotenv
 import os
-import base64
-import htmlmin
-import urllib.parse
 import base64
 import io
 from PIL import Image
@@ -26,7 +22,6 @@ if LOCAL:
     NOTEBOOK_PATH = f'./{os.getenv("NOTEBOOK_NAME")}'
 else:
     NOTEBOOK_PATH = f'/autograder/source/{os.getenv("NOTEBOOK_NAME")}'
-    
 
 def otto_ascii_creator(gradescope_dict, total_score, total_possible):
     max_len = max([len(test['name']) for test in gradescope_dict['tests']])
@@ -74,21 +69,6 @@ def clear_notebook(notebook):
             if cell.cell_type == 'code':
                 cell.outputs = []
 
-def unindent_notebook(notebook):
-    for cell in notebook.cells:
-        if cell.cell_type == 'markdown':
-            lines = cell.source.splitlines()
-            for i, line in enumerate(lines):
-                if line.startswith('#'):
-                    # Count the number of `#` characters to determine the header level
-                    header_level = line.count('#')
-                    if header_level < 6:  # If header is not already at the smallest level
-                        # Reduce the header level by one
-                        new_line = '#' * (header_level + 1) + line.lstrip('#')
-                        lines[i] = new_line
-            # Join the modified lines back together
-            cell.source = '\n'.join(lines)
-
 def volumetric_shit_compressor(base64_string, max_width=600, output_format="WEBP", quality=85):
     image_data = base64.b64decode(base64_string)
     image = Image.open(io.BytesIO(image_data))
@@ -104,8 +84,6 @@ def volumetric_shit_compressor(base64_string, max_width=600, output_format="WEBP
 
     return base64.b64encode(compressed_image_io.getvalue()).decode("utf-8")
 
-
-
 def image_html_factory(notebook):
     html_content = '<!DOCTYPE html><html><body style="display: flex; justify-content: center; align-items: center;"><div style="display: flex; flex-direction: column; align-content: center;">'
     # Iterate through the cells to find image outputs
@@ -120,23 +98,6 @@ def image_html_factory(notebook):
                         html_content = html_content + new_html
     html_content = html_content + '</div></body></html>'
     return html_content
-
-def image_md_factory(notebook):
-    images = []
-    
-    # Iterate through the cells to find image outputs
-    for cell in notebook.get("cells", []):
-        if cell.get("cell_type") == "code":
-            for output in cell.get("outputs", []):
-                if output.get("output_type") == "display_data":
-                    image_data = output.get("data", {}).get("image/png")
-                    if image_data:
-                        # compressed_image_data = base64.urlsafe_b64encode(base64.b64decode(image_data)).decode("utf-8").rstrip("=")
-                        images.append(f'![Image](data:image/webp;base64,{image_data})')
-    
-    # Create markdown content
-    md_content = "\n\n".join(images)
-    return md_content
 
 def score_notebook(notebook_path):
     with tempfile.NamedTemporaryFile(suffix=".ipynb", delete=False) as tmp_notebook:
