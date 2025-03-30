@@ -1,6 +1,6 @@
 {
-    "notebook_name": "HW_3_robot_arm.ipynb",
-    "required_files": ["arm_routines.py"],
+    "notebook_name": "Lab_4_data_fitting.ipynb",
+    "required_files": [],
     "max_score": 25,
     "grade_restarted": true,
     "only_display_outputs": true

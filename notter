@@ -19,6 +19,7 @@ import json
 
 with open('config.json') as config_file: config = json.load(config_file)
 LOCAL = os.getenv("HOSTNAME", "") == "wintermute"
+
 MAX_SCORE = config['max_score']
 IMAGES_ONLY = config['only_display_outputs']
 RESTART_RUN_ALL_CHECK = config['grade_restarted']
@@ -26,7 +27,19 @@ if LOCAL:
     NOTEBOOK_PATH = f'./{config['notebook_name']}'
 else:
     NOTEBOOK_PATH = f'/autograder/source/{config['notebook_name']}'
-REQUIRED_FILES = config['required_files']
+
+
+if LOCAL:
+    directory_path = "./files"
+else:
+    directory_path = "/autograder/source/files"
+
+REQUIRED_FILES = []
+for root, dirs, filenames in os.walk(directory_path):
+    for filename in filenames:
+        # Remove the top-level directory from the path
+        relative_path = os.path.relpath(os.path.join(root, filename), directory_path)
+        REQUIRED_FILES.append(relative_path)
 
 def otto_ascii_creator(gradescope_dict, total_score, total_possible):
     max_len = max([len(test['name']) for test in gradescope_dict['tests']])
@@ -74,7 +87,7 @@ def clear_notebook(notebook):
             if cell.cell_type == 'code':
                 cell.outputs = []
 
-def volumetric_shit_compressor(base64_string, max_width=600, output_format="WEBP", quality=85):
+def volumetric_shit_compressor(base64_string, max_width=800, output_format="WEBP", quality=85):
     image_data = base64.b64decode(base64_string)
     image = Image.open(io.BytesIO(image_data))
 
@@ -125,9 +138,9 @@ def score_notebook(notebook_path):
 
         # grade complete notebook
         if LOCAL:
-            otter_results = grade_submission(tmp_notebook_path, 'autograder.zip', extra_submission_files=REQUIRED_FILES, quiet=True)
+            otter_results = grade_submission(tmp_notebook_path, 'autograder.zip', quiet=False)
         else:
-            otter_results = grade_submission(tmp_notebook_path, '/autograder/source/autograder.zip', extra_submission_files=REQUIRED_FILES, quiet=True)
+            otter_results = grade_submission(tmp_notebook_path, '/autograder/source/autograder.zip', quiet=True)
         
         gradescope_results = {}
         
