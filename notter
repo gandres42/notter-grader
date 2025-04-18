@@ -15,7 +15,7 @@ import numpy as np
 import json
 
 # add local check to make local testing easier
-LOCAL = os.getenv("HOSTNAME", "") != "wintermute"
+LOCAL = os.getenv("HOSTNAME", "") == "wintermute"
 
 # parse config.json
 with open('config.json') as config_file:
