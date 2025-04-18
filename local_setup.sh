@@ -21,6 +21,7 @@ while IFS= read -r item; do
   fi
 done < <(find "$source_dir" -mindepth 1 -type f -o -type d)
 
+rm -rf files
+
 # generate autograder.zip
-echo "${moved_files[@]}"
 uv run otter generate "${moved_files[@]}"

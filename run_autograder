@@ -1,6 +1,7 @@
 #!/bin/bash
 # copy submission files to grading workspace
 for file in /autograder/submission/*; do
+  # don't overwrite files to prevent code injection
   [ -e "./autograder/source/$(basename "$file")" ] || cp -r "$file" /autograder/source/
 done
 
