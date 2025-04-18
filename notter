@@ -14,10 +14,10 @@ from PIL import Image
 import numpy as np
 import json
 
-# TODO toggle/combine image and stdout
+# TODO dynamic image recompression, improve restart/run all check
 
 # add local check to make local testing easier
-LOCAL = os.getenv("HOSTNAME", "") == "wintermute"
+LOCAL = os.getenv("USER", "") != "root"
 
 # parse config.json
 with open('config.json') as config_file:
@@ -65,20 +65,40 @@ def otto_ascii_creator(gradescope_dict, total_score, total_possible):
     return summary
 
 # check if all notebook cells have been run
+# def check_restart_runall(notebook):
+#     execution_counts = []
+#     prev_run = 0
+#     score = 1
+#     msg = "Restarted and all cells run"
+#     for i, cell in enumerate(notebook.cells):
+#         if cell.cell_type == "code":
+#             execution_counts.append(cell.execution_count)
+#             if cell.execution_count == None or cell.execution_count != prev_run + 1:
+#                 score = 0
+#                 msg = "Did not restart and run all before submission"
+#                 break
+#             prev_run = cell.execution_count
+#     return score, msg
+
 def check_restart_runall(notebook):
-    execution_counts = []
-    prev_run = 0
-    score = 1
-    msg = "Restarted and all cells run"
-    for i, cell in enumerate(notebook.cells):
+    prev_count = 0
+    strikes = 0
+    for cell in notebook.cells:
         if cell.cell_type == "code":
-            execution_counts.append(cell.execution_count)
-            if cell.execution_count == None or cell.execution_count != prev_run + 1:
-                score = 0
-                msg = "Did not restart and run all before submission"
-                break
-            prev_run = cell.execution_count
-    return score, msg
+            # if cell not increasing, add strike.  Otherwise reset strikes.
+            if cell.execution_count != prev_count + 1:
+                strikes += 1
+            else:
+                strikes = 0
+            
+            # if 3 strikes, they're out
+            if strikes >= 3:
+                return 0, "Did not restart and run all cells"
+            
+            if cell.execution_count != None:
+                prev_count = cell.execution_count
+
+    return 1, "Restarted and all cells run"
 
 # clear notebook outputs
 def clear_notebook(notebook):
