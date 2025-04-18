@@ -13,7 +13,7 @@ git clone https://github.com/gandres42/notter-grader
 
 3. Add tests into the tests folder.  These are the same as otter-grader, so refer to their docs for creation.
 
-4. Set configuration options in the config.json.
+4. Set configuration options in the config.json.  **Don't forget to set the notebook name**
 
 5. Compress the files into autograder.zip, and it's ready to upload to gradescope.
 
