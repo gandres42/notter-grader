@@ -31,15 +31,14 @@ else:
     NOTEBOOK_PATH = f'/autograder/source/{config['notebook_name']}'
 
 
+# move required files into the grading workspace
 if LOCAL:
     directory_path = "./files"
 else:
     directory_path = "/autograder/source/files"
-
 REQUIRED_FILES = []
 for root, dirs, filenames in os.walk(directory_path):
     for filename in filenames:
-        # Remove the top-level directory from the path
         relative_path = os.path.relpath(os.path.join(root, filename), directory_path)
         REQUIRED_FILES.append(relative_path)
 
@@ -47,7 +46,6 @@ for root, dirs, filenames in os.walk(directory_path):
 def otto_ascii_creator(gradescope_dict, total_score, total_possible):
     max_len = max([len(test['name']) for test in gradescope_dict['tests']])
     ascii_header = """
-
 
   _   _       _   _            
  | \\ | |     | | | |           
@@ -58,16 +56,12 @@ def otto_ascii_creator(gradescope_dict, total_score, total_possible):
 
 ------------------------------- GRADING SUMMARY --------------------------------"""
 
-    
     summary = f'{"name".rjust(max_len)}  {"score".rjust(5)}  {"max_score".rjust(9)}\n'
-    
     for test in gradescope_dict['tests']:
         if 'score' in test.keys():
             summary += f'{test['name'].rjust(max_len)}  {str(float(test['score'])).rjust(5)}  {str(float(test['max_score'])).rjust(9)}\n'
-            
     header = f'Total Score: {round(total_score, 3)} / {round(total_possible, 3)} ({round((total_score / total_possible) * 100, 3)}%)'
     summary = f'{ascii_header}\n{header}\n\n{summary}'
-    
     return summary
 
 # check if all notebook cells have been run
@@ -89,8 +83,8 @@ def check_restart_runall(notebook):
 # clear notebook outputs
 def clear_notebook(notebook):
     for cell in notebook.cells:
-            if cell.cell_type == 'code':
-                cell.outputs = []
+        if cell.cell_type == 'code':
+            cell.outputs = []
 
 # compress images until they're under the gradescope base64 limit
 def image_compressor(base64_string, max_width=600, output_format="WEBP", quality=85):
