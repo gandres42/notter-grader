@@ -87,7 +87,7 @@ def clear_notebook(notebook):
             cell.outputs = []
 
 # compress images until they're under the gradescope base64 limit
-def image_compressor(base64_string, max_width=600, output_format="WEBP", quality=85):
+def image_compressor(base64_string, max_width=500, output_format="WEBP", quality=85):
     image_data = base64.b64decode(base64_string)
     image = Image.open(io.BytesIO(image_data))
 
