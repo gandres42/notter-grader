@@ -65,21 +65,6 @@ def otto_ascii_creator(gradescope_dict, total_score, total_possible):
     return summary
 
 # check if all notebook cells have been run
-# def check_restart_runall(notebook):
-#     execution_counts = []
-#     prev_run = 0
-#     score = 1
-#     msg = "Restarted and all cells run"
-#     for i, cell in enumerate(notebook.cells):
-#         if cell.cell_type == "code":
-#             execution_counts.append(cell.execution_count)
-#             if cell.execution_count == None or cell.execution_count != prev_run + 1:
-#                 score = 0
-#                 msg = "Did not restart and run all before submission"
-#                 break
-#             prev_run = cell.execution_count
-#     return score, msg
-
 def check_restart_runall(notebook):
     prev_count = 0
     strikes = 0
