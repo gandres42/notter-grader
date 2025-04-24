@@ -1,5 +1,5 @@
 {
-    "max_score": 30,
+    "points_possible": 10,
     "grade_restarted": true,
-    "only_display_outputs": true
+    "output_images": false
 }
