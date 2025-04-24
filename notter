@@ -190,11 +190,9 @@ def score_notebook(notebook_path):
                     print(otto_ascii_creator(gradescope_results, adjusted_score, MAX_SCORE))
             gradescope_results['output'] = html_body
             gradescope_results['output_format'] = 'html'
-        else:
-            if LOCAL:
-                print(otto_ascii_creator(gradescope_results, adjusted_score, MAX_SCORE))
-            gradescope_results['output'] = otto_ascii_creator(gradescope_results, adjusted_score, MAX_SCORE)
-            gradescope_results['output_format'] = 'text'
+        
+        # print score to stdout
+        print(otto_ascii_creator(gradescope_results, adjusted_score, MAX_SCORE))
 
         # dump results into results.json for gradescope
         json_string = json.dumps(gradescope_results, ensure_ascii=False)
