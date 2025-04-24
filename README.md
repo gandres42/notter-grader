@@ -21,11 +21,11 @@ git clone https://github.com/gandres42/notter-grader
 ## Configuration Options
 notter-grader can be configured in config.json using the included flags:
 
-`max_score`: The gradescope max score that tests will be normalized to.
+`points_possible`: The gradescope max score that tests will be normalized to.
 
 `grade_restarted`: If True adds include an additional test to check if the notebook has been restarted and all cells run before submission, if False just grades tests.
 
-`only_display_outputs`: If True the grader extracts images and formats them as HTML, then sets them as the Gradescope output.  If False, it outputs individual test results and total scores.
+`output_images`: If True the grader extracts images and formats them as HTML, then sets them as the Gradescope output.  If False, it outputs individual test results and total scores.
 
 
 ## Why notter?
