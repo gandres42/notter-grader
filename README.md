@@ -1,5 +1,5 @@
 # notter-grader
-*It's not the otter-grader, it's yet anotter-grader!*
+*It's not the otter-grader, it's yet anotter-grader*
 
 ## Usage with Gradescope
 To prepare an autograder.zip for an assignment:
