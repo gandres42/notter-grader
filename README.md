@@ -13,15 +13,13 @@ git clone https://github.com/gandres42/notter-grader
 
 3. Add tests into the tests folder.  These are the same as otter-grader, so refer to their docs for creation.
 
-4. Set configuration options in the config.json.  **Don't forget to set the notebook name**
+4. Set configuration options in the config.json.
 
 5. Compress the files into autograder.zip, and it's ready to upload to gradescope.
 
 
 ## Configuration Options
 notter-grader can be configured in config.json using the included flags:
-
-`notebook_name`: The filename of the notebook to be graded.  As of yet, notter only grades one notebook at a time, and needs the file name specified.
 
 `max_score`: The gradescope max score that tests will be normalized to.
 
