@@ -32,18 +32,11 @@ if LOCAL:
 else:
     notebook_dir = '/autograder/source/'
 notebook_name = sorted([f for f in os.listdir(notebook_dir) if f.endswith('.ipynb')])[0]
+print(f"notebook name: {notebook_name}")
 NOTEBOOK_PATH = f'{notebook_dir}{notebook_name}'
 
-# move required files into the grading workspace
-if LOCAL:
-    directory_path = "./files"
-else:
-    directory_path = "/autograder/source/files"
-REQUIRED_FILES = []
-for root, dirs, filenames in os.walk(directory_path):
-    for filename in filenames:
-        relative_path = os.path.relpath(os.path.join(root, filename), directory_path)
-        REQUIRED_FILES.append(relative_path)
+# identify additional .py files to use when grading
+ADDITIONAL_FILES = [f for f in os.listdir() if f.endswith('.py') and os.path.isfile(f)]
 
 # generate pretty output text
 def otto_ascii_creator(gradescope_dict, total_score, total_possible):
@@ -153,9 +146,9 @@ def score_notebook(notebook_path):
 
         # grade complete notebook
         if LOCAL:
-            otter_results = grade_submission(tmp_notebook_path, 'autograder.zip', quiet=True)
+            otter_results = grade_submission(tmp_notebook_path, 'autograder.zip', extra_submission_files=ADDITIONAL_FILES, quiet=True)
         else:
-            otter_results = grade_submission(tmp_notebook_path, '/autograder/source/autograder.zip', quiet=True)
+            otter_results = grade_submission(tmp_notebook_path, '/autograder/source/autograder.zip', extra_submission_files=ADDITIONAL_FILES, quiet=True)
         
         gradescope_results = {}
         
